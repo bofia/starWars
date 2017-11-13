@@ -1,0 +1,107 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src=".\dist\tablefilter\tablefilter.js"></script>
+</head>
+
+<h1>TableFilter starter</h1>
+<table id="StarWarsTable">
+    <thead>
+        <tr>
+            <th>Character Name</th>
+            <th>Film</th>
+            <th>Gender</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+function iterateFilms(char_name, gender, index, film_list, iterateCallback, char_list, indexFilm, movieNames, results){
+
+  if( indexFilm >= film_list.length)
+  {
+    results.push([char_name, movieNames, gender]);
+    iterateCallback(char_list, index, results);
+  }
+  else {
+    var url = film_list[indexFilm]
+    // console.log(url)
+    jQuery.getJSON(url, function(data) {
+      // console.log(typeof data.title);
+      movieNames.push(data.title);
+      indexFilm = indexFilm + 1;
+      // console.log(movieNames)
+      iterateFilms(char_name, gender, index, film_list, iterateCallback, char_list, indexFilm, movieNames, results)
+
+    })
+  }
+}
+
+function iterateCharacterlist(char_list, index, results) {
+  if( index >= char_list.length)
+  {
+    console.log(results)
+    for (var i = 0; i < results.length; i++) {
+      writeRow(results[i])
+    }
+    addFilters()
+  }
+  else {
+    var info = char_list[index];
+    var indexFilm = 0;
+    var film_list = info['films'];
+    var movieNames = [];
+    var char_name = info['name'];
+    var gender = info['gender'];
+
+
+    index = index + 1;
+    iterateFilms(char_name, gender, index, film_list, iterateCharacterlist, char_list, indexFilm, movieNames, results);
+  }
+}
+
+function loadData() {
+    jQuery.getJSON('https://swapi.co/api/people', function(data) {
+      // console.log(data.results);
+      iterateCharacterlist(data.results, 0, [])
+    })
+  }
+
+
+
+// clean up this function
+function writeRow(array) {
+    var tbody = $('#StarWarsTable');
+    for (var i = 0; i < array.length / 8; i++) {
+        var tr = $('<tr/>').appendTo(tbody);
+        var count = 0;
+        for (var j = 0; j < 3; j++) {
+            tr.append('<td>' + array[count] + '</td>');
+            count++;
+        }
+    }
+    // reset the count:
+    count = 0;
+}
+
+ function addFilters(){
+   var filtersConfig = {
+     // instruct TableFilter location to import ressources from
+     base_path: 'https://unpkg.com/tablefilter@latest/dist/tablefilter/',
+     col_0: 'select',
+     col_1: 'select',
+     col_2: 'select',
+     col_3: 'select',
+   };
+
+   var tf = new TableFilter('StarWarsTable', filtersConfig);
+   tf.init();
+ }
+
+loadData()
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+﻿Table with filters generated using Star Wars API data, filters created by using tablefilter library
