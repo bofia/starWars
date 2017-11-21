@@ -1,0 +1,106 @@
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  </head>
+
+  <body>
+    <h1>Star Wars filter</h1>
+    <select multiple id="film-filter">
+    </select>
+    <table id="sw-table">
+      <thead>
+        <tr>
+          <th>Character Name</th>
+          <th>Film</th>
+          <th>Gender</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+    <script>
+      $(document).ready(function() {
+
+        var url = 'https://swapi.co/api/people';
+
+         // global variable for simplicity
+        filmMap = getFilms();
+
+        getPeople(url);
+
+        var $filmFilter = $('#film-filter');
+
+        // Populate film filter
+        $.each(filmMap, function(k, filmName) {
+          $filmFilter.append('<option value="' + filmName + '">' + filmName + '</option>')
+        });
+
+        $filmFilter.on('change', function(e) {
+          filterTable($('#film-filter option:selected'));
+        });
+
+      });
+
+      function filterTable(filmList) {
+        $('tbody tr').hide();
+        $('tbody tr').filter(function() {
+          var tableRow = $(this);
+          var personFilmString = $(this).data('films');
+          $.each(filmList, function(i, filmName) {
+            if (personFilmString.indexOf(filmName.text) != -1) {
+              tableRow.show();
+            }
+          });
+        });
+      }
+
+
+      function getPeople(url) {
+        $.getJSON(url, function(data) {
+          $.each(data.results, function(i, peopleData) {
+
+            var filmNameList = []
+            $.each(peopleData.films, function(i, films) {
+              filmNameList.push(filmMap[films]);
+            });
+            var filmsString = filmNameList.join(',');
+
+            $('tbody').append('<tr data-films="' + filmsString + '"' + '><td>' + peopleData.name + '</td><td>' + filmsString + '</td><td>' + peopleData.gender + '</td></tr>');
+          });
+
+          if (data.next != null) {
+            getPeople(data.next);
+          }
+
+        });
+      }
+
+      // Map out film number to names
+      // Returns a dictionary like {'https://swapi.co/api/films/1/': 'A New Hope'}
+      function getFilms() {
+        var url = 'https://swapi.co/api/films/';
+        var filmDict = {};
+
+        $.ajax({
+          url: url,
+          dataType: 'json',
+          async: false,
+          success: function(data) {
+            $.each(data.results, function(i, filmData) {
+
+              // Convert to 1-indexed url
+              filmUrl = 'https://swapi.co/api/films/' + (i+1) + '/';
+              filmDict[filmUrl] = filmData.title;
+            });
+          }
+        });
+
+        return filmDict;
+      }
+
+    </script>
+
+  </body>
+
+</html>
